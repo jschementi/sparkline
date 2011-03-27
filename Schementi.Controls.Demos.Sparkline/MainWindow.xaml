@@ -1,0 +1,12 @@
+﻿<Window x:Class="Schementi.Controls.Demos.Sparkline.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:schementi="clr-namespace:Schementi.Controls;assembly=Schementi.Controls.Sparkline"
+        Title="Sparkline Demo (Jimmy Schementi)" Height="300" Width="600">
+    <Grid Background="Black" x:Name="Grid">
+        <schementi:Sparkline Foreground="#FFEEEEEE" 
+                             StrokeThickness="0.5"
+                             PointFill="White"
+                             PointRadius="0.5"/>
+    </Grid>
+</Window>
