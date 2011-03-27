@@ -4,7 +4,22 @@
         xmlns:schementi="clr-namespace:Schementi.Controls;assembly=Schementi.Controls.Sparkline"
         Title="Sparkline Demo (Jimmy Schementi)" Height="300" Width="600">
     <Grid Background="Black" x:Name="Grid">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         <schementi:Sparkline Foreground="#FFEEEEEE" 
+                             StrokeThickness="0.5"
+                             PointFill="White"
+                             PointRadius="0.5"/>
+        <schementi:Sparkline Grid.Row="1"
+                             Foreground="#FFEEEEEE" 
+                             StrokeThickness="0.5"
+                             PointFill="White"
+                             PointRadius="0.5"/>
+        <schementi:Sparkline Grid.Row="2"
+                             Foreground="#FFEEEEEE" 
                              StrokeThickness="0.5"
                              PointFill="White"
                              PointRadius="0.5"/>
