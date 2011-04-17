@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -70,25 +71,35 @@ namespace Schementi.Controls {
             "PointRadius",
             typeof(double),
             typeof(Sparkline),
-            new PropertyMetadata(0.5));
+            new PropertyMetadata(0.0));
 
         public double PointRadius {
             get { return (double)GetValue(PointRadiusProperty); }
             set { SetValue(PointRadiusProperty, value); }
         }
         #endregion
+
         #endregion
 
         #region Fields
         private int _nextXValue = 0;
 
         private const int XWidth = 10;
+
+        private readonly Polyline _polyline;
         #endregion
 
         #region Public API
         public Sparkline() {
             InitializeComponent();
             TimeSeries = new TimeSeries();
+
+            _polyline  = new Polyline();
+            BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
+                                         new Binding("Foreground") {Mode = BindingMode.TwoWay, Source = this});
+            BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
+                                         new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
+            this.Canvas.Children.Add(_polyline);
         }
 
         public void AddTimeValue(double value, DateTime? time = null) {
@@ -131,6 +142,7 @@ namespace Schementi.Controls {
 
         private void ResetTimeSeries() {
             Canvas.Children.Clear();
+            Canvas.Children.Add(_polyline);
             _nextXValue = 0;
             foreach (var timeValue in TimeSeries) {
                 DrawTimeValue(timeValue);
@@ -138,23 +150,15 @@ namespace Schementi.Controls {
         }
 
         private void DrawTimeValue(TimeValue newTimeValue) {
-            var endIndex = TimeSeries.IndexOf(newTimeValue);
-            if (endIndex > 0) {
-                var previousTimeValue = TimeSeries[endIndex - 1];
-                Canvas.Children.Add(DrawLine(GetStartPoint(previousTimeValue), GetEndPoint(newTimeValue)));
-                _nextXValue++;
-            }
-            Canvas.Children.Add(DrawDot(GetStartPoint(newTimeValue)));
+            AddPoint(GetPoint(newTimeValue));
             ScrollViewer.ScrollToRightEnd();
         }
 
-        private Path DrawLine(Point startPoint, Point endPoint) {
-            var path = new Path();
-            var geo = new LineGeometry(startPoint, endPoint);
-            path.Stroke = Foreground;
-            path.StrokeThickness = StrokeThickness;
-            path.Data = geo;
-            return path;
+        private void AddPoint(Point point) {
+            _polyline.Points.Add(point);
+            if (this.PointRadius > 0.0) 
+                Canvas.Children.Add(DrawDot(point));
+            _nextXValue++;
         }
 
         private Path DrawDot(Point center) {
@@ -165,12 +169,8 @@ namespace Schementi.Controls {
             return path;
         }
 
-        private Point GetStartPoint(TimeValue timeValue) {
+        private Point GetPoint(TimeValue timeValue) {
             return new Point(_nextXValue * XWidth, timeValue.Value);
-        }
-
-        private Point GetEndPoint(TimeValue timeValue) {
-            return new Point((_nextXValue + 1) * XWidth, timeValue.Value);
         }
         #endregion
     }
