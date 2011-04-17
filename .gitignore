@@ -3,3 +3,4 @@ obj
 *.suo
 _ReSharper*
 *.user
+.svn
