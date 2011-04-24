@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -27,7 +25,7 @@ namespace Schementi.Controls {
     /// <summary>
     /// Interaction logic for Sparkline.xaml
     /// </summary>
-    public partial class Sparkline : UserControl {
+    public partial class Sparkline {
         #region Dependency Properties
         #region Points
         public static DependencyProperty TimeSeriesProperty = DependencyProperty.Register(
@@ -115,10 +113,10 @@ namespace Schementi.Controls {
             new PropertyMetadata(false, OnShowWatermarksPropertyChanged));
 
         private static void OnShowWatermarksPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            ((Sparkline)d).OnShowWatermarksPropertyChanged(e);
+            ((Sparkline)d).OnShowWatermarksPropertyChanged();
         }
 
-        private void OnShowWatermarksPropertyChanged(DependencyPropertyChangedEventArgs e)
+        private void OnShowWatermarksPropertyChanged()
         {
             if (ShowWatermarks) {
                 _lowwatermark = new Rectangle {
@@ -127,9 +125,9 @@ namespace Schementi.Controls {
                     Height = 1,
                     VerticalAlignment = VerticalAlignment.Top
                 };
-                BindingOperations.SetBinding(_lowwatermark, FrameworkElement.MarginProperty,
+                BindingOperations.SetBinding(_lowwatermark, MarginProperty,
                                              new Binding("LowWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                this.Canvas.Children.Add(_lowwatermark);
+                Canvas.Children.Add(_lowwatermark);
 
                 _highwatermark = new Rectangle {
                     Fill = Brushes.Green,
@@ -137,9 +135,9 @@ namespace Schementi.Controls {
                     Height = 1,
                     VerticalAlignment = VerticalAlignment.Top
                 };
-                BindingOperations.SetBinding(_highwatermark, FrameworkElement.MarginProperty,
+                BindingOperations.SetBinding(_highwatermark, MarginProperty,
                                              new Binding("HighWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                this.Canvas.Children.Add(_highwatermark);
+                Canvas.Children.Add(_highwatermark);
             } else {
                 if (_lowwatermark != null) {
                     Canvas.Children.Remove(_lowwatermark);
@@ -161,11 +159,11 @@ namespace Schementi.Controls {
         #endregion
 
         #region Fields
-        private int _nextXValue = 0;
+        private int _nextXValue;
 
         private const int XWidth = 10;
 
-        private readonly Polyline _polyline;
+        private Polyline _polyline;
 
         private Rectangle _highwatermark;
         private Rectangle _lowwatermark;
@@ -175,14 +173,16 @@ namespace Schementi.Controls {
         public Sparkline() {
             InitializeComponent();
             TimeSeries = new TimeSeries();
+            InitializePolyline();
+        }
 
-            _polyline  = new Polyline();
+        private void InitializePolyline() {
+            _polyline = new Polyline();
             BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
-                                         new Binding("Foreground") {Mode = BindingMode.TwoWay, Source = this});
+                                         new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
-            this.Canvas.Children.Add(_polyline);
-            this.OnShowWatermarksPropertyChanged(new DependencyPropertyChangedEventArgs());
+            Canvas.Children.Add(_polyline);
         }
 
         public void AddTimeValue(double value, DateTime? time = null) {
@@ -235,13 +235,16 @@ namespace Schementi.Controls {
         }
 
         private void DrawTimeValue(TimeValue newTimeValue) {
-            AddPoint(GetPoint(newTimeValue));
+            var point = GetPoint(newTimeValue);
+            AddPoint(point);
             ScrollViewer.ScrollToRightEnd();
         }
 
         private void AddPoint(Point point) {
             _polyline.Points.Add(point);
-            if (this.PointRadius > 0.0) 
+            SetWatermarks(point.Y);
+            SetCanvasHeight();
+            if (PointRadius > 0.0)
                 Canvas.Children.Add(DrawDot(point));
             _nextXValue++;
         }
@@ -255,7 +258,10 @@ namespace Schementi.Controls {
         }
 
         private Point GetPoint(TimeValue timeValue) {
-            var y = timeValue.Value;
+            return new Point(_nextXValue * XWidth, timeValue.Value);
+        }
+
+        private void SetWatermarks(double y) {
             if (LowWaterMark == null)
                 LowWaterMark = y;
             if (HighWaterMark == null)
@@ -263,11 +269,11 @@ namespace Schementi.Controls {
 
             if (y > HighWaterMark) HighWaterMark = y;
             else if (y < LowWaterMark) LowWaterMark = y;
+        }
 
-            if (HighWaterMark > Canvas.ActualHeight)
+        private void SetCanvasHeight() {
+            if (HighWaterMark != null && HighWaterMark > Canvas.ActualHeight)
                 Canvas.Height = HighWaterMark.Value;
-
-            return new Point(_nextXValue * XWidth, timeValue.Value);
         }
         #endregion
     }
