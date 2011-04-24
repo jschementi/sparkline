@@ -6,10 +6,10 @@
              x:Class="Schementi.Controls.Sparkline" 
              mc:Ignorable="d" 
              d:DesignHeight="100" d:DesignWidth="300">
-    <Grid x:Name="Root" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" x:Name="ScrollViewer">
+    <Grid x:Name="Root" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="1">
+        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" x:Name="ScrollViewer" Padding="0 3">
             <Viewbox HorizontalAlignment="Left" VerticalAlignment="Stretch" Stretch="Uniform" StretchDirection="Both">
-                <Grid x:Name="Canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="50" RenderTransformOrigin="0.5,0.5">
+                <Grid x:Name="Canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RenderTransformOrigin="0.5,0.5">
                     <Grid.RenderTransform>
                         <ScaleTransform ScaleY="-1"/>
                     </Grid.RenderTransform>

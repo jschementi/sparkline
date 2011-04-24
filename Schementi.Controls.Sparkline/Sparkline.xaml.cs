@@ -228,6 +228,7 @@ namespace Schementi.Controls {
             Canvas.Children.Add(_polyline);
             Canvas.Children.Add(_lowwatermark);
             Canvas.Children.Add(_highwatermark);
+            Canvas.Height = double.NaN;
             _nextXValue = 0;
             foreach (var timeValue in TimeSeries) {
                 DrawTimeValue(timeValue);
@@ -243,7 +244,7 @@ namespace Schementi.Controls {
         private void AddPoint(Point point) {
             _polyline.Points.Add(point);
             SetWatermarks(point.Y);
-            SetCanvasHeight();
+            SetCanvasHeight(point.Y);
             if (PointRadius > 0.0)
                 Canvas.Children.Add(DrawDot(point));
             _nextXValue++;
@@ -271,9 +272,14 @@ namespace Schementi.Controls {
             else if (y < LowWaterMark) LowWaterMark = y;
         }
 
-        private void SetCanvasHeight() {
+        private void SetCanvasHeight(double y) {
+            if (double.IsNaN(Canvas.Height)) {
+                Canvas.Height = Math.Max(50, y * 1.5);
+                return;
+            }
             if (HighWaterMark != null && HighWaterMark > Canvas.ActualHeight)
                 Canvas.Height = HighWaterMark.Value;
+            Console.WriteLine("Height: {0}", Canvas.Height);
         }
         #endregion
     }
