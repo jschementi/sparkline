@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
-using Schementi.Controls;
 
 namespace Schementi.Controls.Demos.Sparkline {
 
@@ -15,12 +14,15 @@ namespace Schementi.Controls.Demos.Sparkline {
 
             var sparklines = Grid.Children.OfType<Controls.Sparkline>();
 
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(0.1) };
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(0.5) };
             var random = new Random();
             timer.Tick += (s, e) => {
-                              foreach(var sparkline in sparklines) 
-                                  sparkline.AddTimeValue((random.NextDouble()*60) + 20);
-                          };
+                foreach (var sparkline in sparklines) {
+                    var x = random.Next(0, 40);
+                    Console.WriteLine(x);
+                    sparkline.AddTimeValue(x);
+                }
+            };
 
             Loaded += (s, e) => timer.Start();
             Unloaded += (s, e) => timer.Stop();

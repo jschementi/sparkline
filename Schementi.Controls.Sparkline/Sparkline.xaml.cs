@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -79,6 +81,83 @@ namespace Schementi.Controls {
         }
         #endregion
 
+        #region HighWaterMark
+        public static DependencyProperty HighWaterMarkProperty = DependencyProperty.Register(
+            "HighWaterMark",
+            typeof(double?),
+            typeof(Sparkline),
+            new PropertyMetadata(null));
+
+        public double? HighWaterMark {
+            get { return (double?)GetValue(HighWaterMarkProperty); }
+            set { SetValue(HighWaterMarkProperty, value); }
+        }
+        #endregion
+
+        #region LowWaterMark
+        public static DependencyProperty LowWaterMarkProperty = DependencyProperty.Register(
+            "LowWaterMark",
+            typeof(double?),
+            typeof(Sparkline),
+            new PropertyMetadata(null));
+
+        public double? LowWaterMark {
+            get { return (double?)GetValue(LowWaterMarkProperty); }
+            set { SetValue(LowWaterMarkProperty, value); }
+        }
+        #endregion
+
+        #region ShowWatermarks
+        public static DependencyProperty ShowWatermarksProperty = DependencyProperty.Register(
+            "ShowWatermarks",
+            typeof(bool),
+            typeof(Sparkline),
+            new PropertyMetadata(false, OnShowWatermarksPropertyChanged));
+
+        private static void OnShowWatermarksPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            ((Sparkline)d).OnShowWatermarksPropertyChanged(e);
+        }
+
+        private void OnShowWatermarksPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            if (ShowWatermarks) {
+                _lowwatermark = new Rectangle {
+                    Fill = Brushes.Red,
+                    Opacity = 0.5,
+                    Height = 1,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                BindingOperations.SetBinding(_lowwatermark, FrameworkElement.MarginProperty,
+                                             new Binding("LowWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
+                this.Canvas.Children.Add(_lowwatermark);
+
+                _highwatermark = new Rectangle {
+                    Fill = Brushes.Green,
+                    Opacity = 0.5,
+                    Height = 1,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                BindingOperations.SetBinding(_highwatermark, FrameworkElement.MarginProperty,
+                                             new Binding("HighWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
+                this.Canvas.Children.Add(_highwatermark);
+            } else {
+                if (_lowwatermark != null) {
+                    Canvas.Children.Remove(_lowwatermark);
+                    _lowwatermark = null;
+                }
+
+                if (_highwatermark != null) {
+                    Canvas.Children.Remove(_highwatermark);
+                    _highwatermark = null;
+                }
+            }
+        }
+
+        public bool ShowWatermarks {
+            get { return (bool)GetValue(ShowWatermarksProperty); }
+            set { SetValue(ShowWatermarksProperty, value); }
+        }
+        #endregion
         #endregion
 
         #region Fields
@@ -87,6 +166,9 @@ namespace Schementi.Controls {
         private const int XWidth = 10;
 
         private readonly Polyline _polyline;
+
+        private Rectangle _highwatermark;
+        private Rectangle _lowwatermark;
         #endregion
 
         #region Public API
@@ -100,6 +182,7 @@ namespace Schementi.Controls {
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
             this.Canvas.Children.Add(_polyline);
+            this.OnShowWatermarksPropertyChanged(new DependencyPropertyChangedEventArgs());
         }
 
         public void AddTimeValue(double value, DateTime? time = null) {
@@ -143,6 +226,8 @@ namespace Schementi.Controls {
         private void ResetTimeSeries() {
             Canvas.Children.Clear();
             Canvas.Children.Add(_polyline);
+            Canvas.Children.Add(_lowwatermark);
+            Canvas.Children.Add(_highwatermark);
             _nextXValue = 0;
             foreach (var timeValue in TimeSeries) {
                 DrawTimeValue(timeValue);
@@ -170,8 +255,30 @@ namespace Schementi.Controls {
         }
 
         private Point GetPoint(TimeValue timeValue) {
+            var y = timeValue.Value;
+            if (LowWaterMark == null)
+                LowWaterMark = y;
+            if (HighWaterMark == null)
+                HighWaterMark = y;
+
+            if (y > HighWaterMark) HighWaterMark = y;
+            else if (y < LowWaterMark) LowWaterMark = y;
+
+            if (HighWaterMark > Canvas.ActualHeight)
+                Canvas.Height = HighWaterMark.Value;
+
             return new Point(_nextXValue * XWidth, timeValue.Value);
         }
         #endregion
+    }
+
+    public class YCoordinateToThicknessConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            return new Thickness(0, (double?)value ?? 0, 0, 0);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotSupportedException();
+        }
     }
 }

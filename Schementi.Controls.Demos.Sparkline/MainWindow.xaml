@@ -14,6 +14,7 @@
                              PointFill="White"
                              PointRadius="0.5"/>
         <schementi:Sparkline Grid.Row="1"
+                             ShowWatermarks="True"
                              Foreground="#FFEEEEEE" 
                              StrokeThickness="0.5"
                              PointFill="White"

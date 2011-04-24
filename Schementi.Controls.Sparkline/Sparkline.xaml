@@ -9,7 +9,11 @@
     <Grid x:Name="Root" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" x:Name="ScrollViewer">
             <Viewbox HorizontalAlignment="Left" VerticalAlignment="Stretch" Stretch="Uniform" StretchDirection="Both">
-                <Grid x:Name="Canvas" Height="100" HorizontalAlignment="Stretch" />
+                <Grid x:Name="Canvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="50" RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <ScaleTransform ScaleY="-1"/>
+                    </Grid.RenderTransform>
+                </Grid>
             </Viewbox>
         </ScrollViewer>
     </Grid>
