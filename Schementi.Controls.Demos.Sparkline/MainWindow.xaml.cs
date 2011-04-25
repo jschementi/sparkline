@@ -14,7 +14,7 @@ namespace Schementi.Controls.Demos.Sparkline {
             var random = new Random();
             timer.Tick += (s, e) => {
                 foreach (var sparkline in sparklines) {
-                    var x = random.Next(0, 20);
+                    var x = random.Next(20, 61);
                     Console.WriteLine(x);
                     sparkline.AddTimeValue(x);
                 }

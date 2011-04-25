@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -122,22 +123,22 @@ namespace Schementi.Controls {
                 _lowwatermark = new Rectangle {
                     Fill = Brushes.Red,
                     Opacity = 0.5,
-                    Height = 1,
+                    Height = this.StrokeThickness,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 BindingOperations.SetBinding(_lowwatermark, MarginProperty,
                                              new Binding("LowWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                Canvas.Children.Add(_lowwatermark);
+                Canvas.Children.Insert(0, _lowwatermark);
 
                 _highwatermark = new Rectangle {
                     Fill = Brushes.Green,
                     Opacity = 0.5,
-                    Height = 1,
+                    Height = this.StrokeThickness,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 BindingOperations.SetBinding(_highwatermark, MarginProperty,
                                              new Binding("HighWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                Canvas.Children.Add(_highwatermark);
+                Canvas.Children.Insert(0, _highwatermark);
             } else {
                 if (_lowwatermark != null) {
                     Canvas.Children.Remove(_lowwatermark);
@@ -154,6 +155,19 @@ namespace Schementi.Controls {
         public bool ShowWatermarks {
             get { return (bool)GetValue(ShowWatermarksProperty); }
             set { SetValue(ShowWatermarksProperty, value); }
+        }
+        #endregion
+
+        #region MinYRange
+        public static DependencyProperty MinYRangeProperty = DependencyProperty.Register(
+            "MinYRange",
+            typeof(double),
+            typeof(Sparkline),
+            new PropertyMetadata(25.0));
+
+        public double MinYRange {
+            get { return (double)GetValue(MinYRangeProperty); }
+            set { SetValue(MinYRangeProperty, value); }
         }
         #endregion
         #endregion
@@ -182,6 +196,7 @@ namespace Schementi.Controls {
                                          new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
+            Canvas.MinHeight = this.MinYRange;
             Canvas.Children.Add(_polyline);
         }
 
@@ -247,6 +262,19 @@ namespace Schementi.Controls {
             SetCanvasHeight(point.Y);
             if (PointRadius > 0.0)
                 Canvas.Children.Add(DrawDot(point));
+#if DEBUG
+            var textbox = new TextBlock {
+                                            Text = Convert.ToString(point.Y),
+                                            FontSize = 3,
+                                            Foreground = this.Foreground,
+                                            Opacity = 0.25,
+                                            Padding = new Thickness(2.0, 0, 0, 0),
+                                            Margin = new Thickness(point.X, point.Y + 1, 0, 0),
+                                            RenderTransform = new ScaleTransform { ScaleY = -1.0 },
+                                            RenderTransformOrigin = new Point(0.0,0.0),
+                                        };
+            Canvas.Children.Add(textbox);
+#endif
             _nextXValue++;
         }
 
@@ -273,13 +301,12 @@ namespace Schementi.Controls {
         }
 
         private void SetCanvasHeight(double y) {
-            if (double.IsNaN(Canvas.Height)) {
-                Canvas.Height = Math.Max(50, y * 1.5);
+            if (TimeSeries.Count < 2) {
+                Canvas.Height = y*2;
                 return;
             }
-            if (HighWaterMark != null && HighWaterMark > Canvas.ActualHeight)
-                Canvas.Height = HighWaterMark.Value;
-            Console.WriteLine("Height: {0}", Canvas.Height);
+            var highwater = HighWaterMark.HasValue ? HighWaterMark.Value + 2 : 0;
+            if (highwater > Canvas.ActualHeight || highwater > Canvas.Height) Canvas.Height = highwater;
         }
         #endregion
     }
