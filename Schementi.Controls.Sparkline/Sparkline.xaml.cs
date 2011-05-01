@@ -158,24 +158,26 @@ namespace Schementi.Controls {
         }
         #endregion
 
-        //#region MinYRange
-        //public static DependencyProperty MinYRangeProperty = DependencyProperty.Register(
-        //    "MinYRange",
-        //    typeof(double),
-        //    typeof(Sparkline),
-        //    new PropertyMetadata(25.0));
+        #region MinYRange
+        public static DependencyProperty MinYRangeProperty = DependencyProperty.Register(
+            "MinYRange",
+            typeof(double),
+            typeof(Sparkline),
+            new PropertyMetadata(25.0));
 
-        //public double MinYRange {
-        //    get { return (double)GetValue(MinYRangeProperty); }
-        //    set { SetValue(MinYRangeProperty, value); }
-        //}
-        //#endregion
+        public double MinYRange {
+            get { return (double)GetValue(MinYRangeProperty); }
+            set { SetValue(MinYRangeProperty, value); }
+        }
+        #endregion
         #endregion
 
         #region Fields
         private int _nextXValue;
 
         private const int XWidth = 10;
+        private const int MinValue = 0;
+        private const int MaxValue = 100;
 
         private Polyline _polyline;
 
@@ -196,7 +198,6 @@ namespace Schementi.Controls {
                                          new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
-            //Canvas.MinHeight = this.MinYRange;
             Canvas.Children.Add(_polyline);
         }
 
@@ -264,15 +265,15 @@ namespace Schementi.Controls {
                 Canvas.Children.Add(DrawDot(point));
 //#if DEBUG
 //            var textbox = new TextBlock {
-//                                            Text = Convert.ToString(point.Y),
-//                                            FontSize = 3,
-//                                            Foreground = this.Foreground,
-//                                            Opacity = 0.25,
-//                                            Padding = new Thickness(2.0, 0, 0, 0),
-//                                            Margin = new Thickness(point.X, point.Y + 1, 0, 0),
-//                                            RenderTransform = new ScaleTransform { ScaleY = -1.0 },
-//                                            RenderTransformOrigin = new Point(0.0,0.0),
-//                                        };
+//                Text = Convert.ToString(Math.Round(point.Y, 2)),
+//                FontSize = 3,
+//                Foreground = this.Foreground,
+//                Opacity = 0.25,
+//                Padding = new Thickness(2.0, 0, 0, 0),
+//                Margin = new Thickness(point.X, point.Y + 1, 0, 0),
+//                RenderTransform = new ScaleTransform { ScaleY = -1.0 },
+//                RenderTransformOrigin = new Point(0.0, 0.0),
+//            };
 //            Canvas.Children.Add(textbox);
 //#endif
             _nextXValue++;
@@ -301,12 +302,13 @@ namespace Schementi.Controls {
         }
 
         private void SetCanvasHeight(double y) {
-            //if (TimeSeries.Count < 2) {
-            //    Canvas.Height = y*2;
-            //    return;
-            //}
-            var highwater = HighWaterMark.HasValue ? HighWaterMark.Value + 2 : 0;
-            if (highwater > Canvas.ActualHeight || highwater > Canvas.Height) Canvas.Height = highwater;
+            var range = HighWaterMark - LowWaterMark;
+            if (range < MinYRange) {
+                Canvas.Height = (LowWaterMark ?? 0) + MinYRange;
+            } else {
+                Canvas.Height = double.NaN;
+                Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));    
+            }
         }
         #endregion
     }
