@@ -240,6 +240,7 @@ namespace Schementi.Controls {
         }
 
         private void ResetTimeSeries() {
+            _both = _lower = _higher = false;
             Canvas.Children.Clear();
             Canvas.Children.Add(_polyline);
             Canvas.Children.Add(_lowwatermark);
@@ -301,14 +302,33 @@ namespace Schementi.Controls {
             else if (y < LowWaterMark) LowWaterMark = y;
         }
 
+        private double _lowMargin;
+        private double _height;
+        private bool _lower;
+        private bool _higher;
+        private bool _both;
+
         private void SetCanvasHeight(double y) {
-            var range = HighWaterMark - LowWaterMark;
-            if (range < MinYRange) {
-                Canvas.Height = (LowWaterMark ?? 0) + MinYRange;
-            } else {
-                Canvas.Height = double.NaN;
-                Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));    
+            if (TimeSeries.Count < 2) {
+                Canvas.Height = _height = y + MinYRange;
+                _lowMargin = -y + MinYRange;
+                Canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
+                return;
             }
+            if (!_both && LowWaterMark != null && LowWaterMark < _lowMargin * -1) {
+                _lower = true;
+                _lowMargin = -LowWaterMark.Value;
+                Canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
+                _both = _lower && _higher;
+            }
+            if (!_both && HighWaterMark != null && HighWaterMark > _height) {
+                _higher = true;
+                Canvas.Height = HighWaterMark.Value;
+                _both = _lower && _higher;    
+            }
+            if (!_both) return;
+            Canvas.Height = double.NaN;
+            Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));
         }
         #endregion
     }
