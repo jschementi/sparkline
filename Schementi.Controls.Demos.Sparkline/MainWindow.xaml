@@ -21,6 +21,7 @@
                              PointFill="White" PointRadius="1"/>
         <schementi:Sparkline Grid.Column="2" Grid.Row="0" Margin="0 1"
                              ShowWatermarks="False" ShowLatestLevel="True"
+                             StrokeThickness="1"
                              Foreground="#FFEEEEEE" />
         <schementi:Sparkline Grid.Column="2" Grid.Row="2" Margin="0 1"
                              ShowWatermarks="True" ShowLatestLevel="True"
