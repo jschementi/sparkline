@@ -4,10 +4,29 @@
         xmlns:schementi="clr-namespace:Schementi.Controls;assembly=Schementi.Controls.Sparkline"
         Title="Sparkline Demo (Jimmy Schementi)" Height="300" Width="600">
     <Grid Background="Black" x:Name="Grid">
-        <schementi:Sparkline ShowWatermarks="True"
-                             Foreground="#FFEEEEEE" 
-                             StrokeThickness="0.5"
-                             PointFill="White"
-                             PointRadius="0.5"/>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="3"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="3"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <schementi:Sparkline Margin="0 1"
+                             Foreground="#FFEEEEEE" />
+        <schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
+                             Foreground="#FFEEEEEE"
+                             PointFill="White" PointRadius="1"/>
+        <schementi:Sparkline Grid.Column="2" Grid.Row="0" Margin="0 1"
+                             ShowWatermarks="False" ShowLatestLevel="True"
+                             Foreground="#FFEEEEEE" />
+        <schementi:Sparkline Grid.Column="2" Grid.Row="2" Margin="0 1"
+                             ShowWatermarks="True" ShowLatestLevel="True"
+                             Foreground="#FFEEEEEE"
+                             PointFill="White" PointRadius="0.5"/>
+        <GridSplitter ResizeDirection="Rows" Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="3"/>
+        <GridSplitter ResizeDirection="Columns" Grid.Column="1" Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="3"/>
     </Grid>
 </Window>

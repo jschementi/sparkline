@@ -106,6 +106,19 @@ namespace Schementi.Controls {
         }
         #endregion
 
+        #region LatestLevel
+        public static DependencyProperty LatestLevelProperty = DependencyProperty.Register(
+            "LatestLevel",
+            typeof(double?),
+            typeof(Sparkline),
+            new PropertyMetadata(null));
+
+        public double? LatestLevel {
+            get { return (double?)GetValue(LatestLevelProperty); }
+            set { SetValue(LatestLevelProperty, value); }
+        }
+        #endregion
+
         #region ShowWatermarks
         public static DependencyProperty ShowWatermarksProperty = DependencyProperty.Register(
             "ShowWatermarks",
@@ -158,6 +171,42 @@ namespace Schementi.Controls {
         }
         #endregion
 
+        #region ShowLatestLevel
+        public static DependencyProperty ShowLatestLevelProperty = DependencyProperty.Register(
+            "ShowLatestLevel",
+            typeof(bool),
+            typeof(Sparkline),
+            new PropertyMetadata(false, OnShowLatestLevelPropertyChanged));
+
+        private static void OnShowLatestLevelPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            ((Sparkline)d).OnShowLatestLevelPropertyChanged();
+        }
+
+        private void OnShowLatestLevelPropertyChanged() {
+            if (ShowLatestLevel) {
+                _latestLevel = new Rectangle {
+                    Fill = Brushes.White,
+                    Opacity = 0.5,
+                    Height = this.StrokeThickness,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                BindingOperations.SetBinding(_latestLevel, MarginProperty,
+                                             new Binding("LatestLevel") { Source = this, Converter = new YCoordinateToThicknessConverter() });
+                Canvas.Children.Insert(0, _latestLevel);
+            } else {
+                if (_latestLevel != null) {
+                    Canvas.Children.Remove(_latestLevel);
+                    _latestLevel = null;
+                }
+            }
+        }
+
+        public bool ShowLatestLevel {
+            get { return (bool)GetValue(ShowLatestLevelProperty); }
+            set { SetValue(ShowLatestLevelProperty, value); }
+        }
+        #endregion
+
         #region MinYRange
         public static DependencyProperty MinYRangeProperty = DependencyProperty.Register(
             "MinYRange",
@@ -183,6 +232,7 @@ namespace Schementi.Controls {
 
         private Rectangle _highwatermark;
         private Rectangle _lowwatermark;
+        private Rectangle _latestLevel;
         #endregion
 
         #region Public API
@@ -194,6 +244,7 @@ namespace Schementi.Controls {
 
         private void InitializePolyline() {
             _polyline = new Polyline();
+            if (this.Foreground == null) this.Foreground = Brushes.Black;
             BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
                                          new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
@@ -243,8 +294,13 @@ namespace Schementi.Controls {
             _both = _lower = _higher = false;
             Canvas.Children.Clear();
             Canvas.Children.Add(_polyline);
-            Canvas.Children.Add(_lowwatermark);
-            Canvas.Children.Add(_highwatermark);
+            if (ShowWatermarks) {
+                Canvas.Children.Add(_lowwatermark);
+                Canvas.Children.Add(_highwatermark);
+            }
+            if (ShowLatestLevel) {
+                Canvas.Children.Add(_latestLevel);
+            }
             Canvas.Height = double.NaN;
             _nextXValue = 0;
             foreach (var timeValue in TimeSeries) {
@@ -261,6 +317,7 @@ namespace Schementi.Controls {
         private void AddPoint(Point point) {
             _polyline.Points.Add(point);
             SetWatermarks(point.Y);
+            SetLatestLevel(point.Y);
             SetCanvasHeight(point.Y);
             if (PointRadius > 0.0)
                 Canvas.Children.Add(DrawDot(point));
@@ -282,7 +339,7 @@ namespace Schementi.Controls {
 
         private Path DrawDot(Point center) {
             var path = new Path();
-            var circle = new EllipseGeometry(center, StrokeThickness, StrokeThickness);
+            var circle = new EllipseGeometry(center, PointRadius, PointRadius);
             path.Fill = PointFill;
             path.Data = circle;
             return path;
@@ -300,6 +357,10 @@ namespace Schementi.Controls {
 
             if (y > HighWaterMark) HighWaterMark = y;
             else if (y < LowWaterMark) LowWaterMark = y;
+        }
+
+        private void SetLatestLevel(double y) {
+            LatestLevel = y;
         }
 
         private double _lowMargin;
