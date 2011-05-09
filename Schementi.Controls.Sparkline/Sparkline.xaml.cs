@@ -8,6 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
+#if SILVERLIGHT
+using Schementi.Controls.Extensions.Silverlight;
+#endif
 
 namespace Schementi.Controls {
 
@@ -59,7 +62,7 @@ namespace Schementi.Controls {
             "PointFill",
             typeof(Brush),
             typeof(Sparkline),
-            new PropertyMetadata(Brushes.Black));
+            new PropertyMetadata(new SolidColorBrush(Colors.Black)));
 
         public Brush PointFill {
             get { return (Brush)GetValue(PointFillProperty); }
@@ -134,9 +137,9 @@ namespace Schementi.Controls {
         {
             if (ShowWatermarks) {
                 _lowwatermark = new Rectangle {
-                    Fill = Brushes.Red,
+                    Fill = new SolidColorBrush(Colors.Red),
                     Opacity = 0.5,
-                    Height = this.StrokeThickness,
+                    Height = StrokeThickness,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 BindingOperations.SetBinding(_lowwatermark, MarginProperty,
@@ -144,9 +147,9 @@ namespace Schementi.Controls {
                 Canvas.Children.Insert(0, _lowwatermark);
 
                 _highwatermark = new Rectangle {
-                    Fill = Brushes.Green,
+                    Fill = new SolidColorBrush(Colors.Green),
                     Opacity = 0.5,
-                    Height = this.StrokeThickness,
+                    Height = StrokeThickness,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 BindingOperations.SetBinding(_highwatermark, MarginProperty,
@@ -185,9 +188,9 @@ namespace Schementi.Controls {
         private void OnShowLatestLevelPropertyChanged() {
             if (ShowLatestLevel) {
                 _latestLevel = new Rectangle {
-                    Fill = Brushes.White,
+                    Fill = new SolidColorBrush(Colors.White),
                     Opacity = 0.5,
-                    Height = this.StrokeThickness,
+                    Height = StrokeThickness,
                     VerticalAlignment = VerticalAlignment.Top
                 };
                 BindingOperations.SetBinding(_latestLevel, MarginProperty,
@@ -225,8 +228,6 @@ namespace Schementi.Controls {
         private int _nextXValue;
 
         private const int XWidth = 10;
-        private const int MinValue = 0;
-        private const int MaxValue = 100;
 
         private Polyline _polyline;
 
@@ -237,19 +238,9 @@ namespace Schementi.Controls {
 
         #region Public API
         public Sparkline() {
-            InitializeComponent();
+            MyInitializeComponent();
             TimeSeries = new TimeSeries();
-            InitializePolyline();
-        }
-
-        private void InitializePolyline() {
-            _polyline = new Polyline();
-            if (this.Foreground == null) this.Foreground = Brushes.Black;
-            BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
-                                         new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
-            BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
-                                         new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
-            Canvas.Children.Add(_polyline);
+            Loaded += (s, e) => InitializePolyline();
         }
 
         public void AddTimeValue(double value, DateTime? time = null) {
@@ -258,6 +249,27 @@ namespace Schementi.Controls {
         #endregion
 
         #region Implementation
+
+        public void MyInitializeComponent() {
+            if (_contentLoaded) {
+                return;
+            }
+            _contentLoaded = true;
+            Application.LoadComponent(this, new Uri("/Schementi.Controls.Sparkline;component/Sparkline.xaml", UriKind.Relative));
+            Root = ((Grid)(FindName("Root")));
+            ScrollViewer = ((ScrollViewer)(FindName("ScrollViewer")));
+            Canvas = ((Grid)(FindName("Canvas")));
+        }
+
+        private void InitializePolyline() {
+            _polyline = new Polyline();
+            if (Foreground == null) Foreground = new SolidColorBrush(Colors.Black);
+            BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
+                                         new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
+            BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
+                                         new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
+            Canvas.Children.Add(_polyline);
+        }
 
         private static void OnTimeSeriesPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((Sparkline)d).OnTimeSeriesPropertyChanged(e);
@@ -273,19 +285,8 @@ namespace Schementi.Controls {
                 case NotifyCollectionChangedAction.Add:
                     foreach (var timeValue in e.NewItems.OfType<TimeValue>()) DrawTimeValue(timeValue);
                     break;
-                case NotifyCollectionChangedAction.Move:
-                    ResetTimeSeries();
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    ResetTimeSeries();
-                    break;
-                case NotifyCollectionChangedAction.Replace:
-                    ResetTimeSeries();
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    ResetTimeSeries();
-                    break;
                 default:
+                    ResetTimeSeries();
                     break;
             }
         }
@@ -339,7 +340,7 @@ namespace Schementi.Controls {
 
         private Path DrawDot(Point center) {
             var path = new Path();
-            var circle = new EllipseGeometry(center, PointRadius, PointRadius);
+            var circle = new EllipseGeometry {Center = center, RadiusX = PointRadius, RadiusY = PointRadius};
             path.Fill = PointFill;
             path.Data = circle;
             return path;
@@ -391,6 +392,7 @@ namespace Schementi.Controls {
             Canvas.Height = double.NaN;
             Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));
         }
+
         #endregion
     }
 
