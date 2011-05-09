@@ -8,7 +8,7 @@
     d:DesignHeight="300" d:DesignWidth="400">
 
     <Grid Background="Black" x:Name="LayoutRoot">
-        <Grid.RowDefinitions>
+        <!--<Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="3"/>
             <RowDefinition/>
@@ -17,10 +17,10 @@
             <ColumnDefinition/>
             <ColumnDefinition Width="3"/>
             <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
+        </Grid.ColumnDefinitions>-->
         <schementi:Sparkline Margin="0 1"
-                             Foreground="#FFEEEEEE" />
-        <schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
+                             Foreground="#FFEEEEEE" ShowLatestLevel="True" />
+        <!--<schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
                              Foreground="#FFEEEEEE"
                              PointFill="White" PointRadius="1"/>
         <schementi:Sparkline Grid.Column="2" Grid.Row="0" Margin="0 1"
@@ -32,6 +32,6 @@
                              Foreground="#FFEEEEEE"
                              PointFill="White" PointRadius="0.5"/>
         <sdk:GridSplitter Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="3"/>
-        <sdk:GridSplitter Grid.Column="1" Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="3"/>
+        <sdk:GridSplitter Grid.Column="1" Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="3"/>-->
     </Grid>
 </UserControl>
