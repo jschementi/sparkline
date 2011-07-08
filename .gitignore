@@ -4,3 +4,4 @@ obj
 _ReSharper*
 *.user
 .svn
+*.sln.docstates
