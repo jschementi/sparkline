@@ -74,6 +74,9 @@
       <Link>MainPage.xaml.cs</Link>
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="..\Schementi.Controls.Demos.Sparkline\SimpleRNG.cs">
+      <Link>SimpleRNG.cs</Link>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>

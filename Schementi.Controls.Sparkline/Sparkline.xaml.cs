@@ -39,7 +39,7 @@ namespace Schementi.Controls {
             Add(new TimeValue { Time = dateTime.Value, Value = value });
         }
     }
-    
+
     /// <summary>
     /// Interaction logic for Sparkline.xaml
     /// </summary>
@@ -68,6 +68,19 @@ namespace Schementi.Controls {
         public double StrokeThickness {
             get { return (double)GetValue(StrokeThicknessProperty); }
             set { SetValue(StrokeThicknessProperty, value); }
+        }
+        #endregion
+
+        #region LineMargin
+        public static DependencyProperty LineMarginProperty = DependencyProperty.Register(
+            "LineMargin",
+            typeof(Thickness),
+            typeof(Sparkline),
+            new PropertyMetadata(new Thickness(0)));
+
+        public Thickness LineMargin {
+            get { return (Thickness)GetValue(LineMarginProperty); }
+            set { SetValue(LineMarginProperty, value); }
         }
         #endregion
 
@@ -154,7 +167,8 @@ namespace Schementi.Controls {
                     Fill = new SolidColorBrush(Colors.Red),
                     Opacity = 0.5,
                     Height = StrokeThickness,
-                    VerticalAlignment = VerticalAlignment.Top
+                    VerticalAlignment = VerticalAlignment.Top,
+                    UseLayoutRounding = false,
                 };
                 BindingOperations.SetBinding(_lowwatermark, MarginProperty,
                                              new Binding("LowWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
@@ -164,7 +178,8 @@ namespace Schementi.Controls {
                     Fill = new SolidColorBrush(Colors.Green),
                     Opacity = 0.5,
                     Height = StrokeThickness,
-                    VerticalAlignment = VerticalAlignment.Top
+                    VerticalAlignment = VerticalAlignment.Top,
+                    UseLayoutRounding = false,
                 };
                 BindingOperations.SetBinding(_highwatermark, MarginProperty,
                                              new Binding("HighWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
@@ -205,7 +220,8 @@ namespace Schementi.Controls {
                     Fill = new SolidColorBrush(Colors.White),
                     Opacity = 0.5,
                     Height = StrokeThickness,
-                    VerticalAlignment = VerticalAlignment.Top
+                    VerticalAlignment = VerticalAlignment.Top,
+                    UseLayoutRounding = false,
                 };
                 BindingOperations.SetBinding(_latestLevel, MarginProperty,
                                              new Binding("LatestLevel") { Source = this, Converter = new YCoordinateToThicknessConverter() });
@@ -236,6 +252,8 @@ namespace Schementi.Controls {
             set { SetValue(MinYRangeProperty, value); }
         }
         #endregion
+
+
         #endregion
 
         #region Fields
@@ -248,17 +266,24 @@ namespace Schementi.Controls {
         private Rectangle _highwatermark;
         private Rectangle _lowwatermark;
         private Rectangle _latestLevel;
+
+        private Point? _latestAddedPoint;
         #endregion
 
         #region Public API
+
         public Sparkline() {
             MyInitializeComponent();
             TimeSeries = new TimeSeries();
             Loaded += (s, e) => InitializePolyline();
         }
 
-        public void AddTimeValue(double value, DateTime? time = null) {
+        public void AddTimeValue(double value, DateTime? time = null, Action<Point, Panel> onAdd = null) {
+            _latestAddedPoint = null;
             TimeSeries.AddTimeValue(value, time);
+            if (onAdd != null && _latestAddedPoint.HasValue) {
+                onAdd(_latestAddedPoint.Value, Canvas);
+            }
         }
         #endregion
 
@@ -282,6 +307,8 @@ namespace Schementi.Controls {
                                          new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
+            BindingOperations.SetBinding(_polyline, MarginProperty,
+                new Binding("LineMargin") { Mode = BindingMode.TwoWay, Source = this });
             Canvas.Children.Add(_polyline);
         }
 
@@ -331,6 +358,7 @@ namespace Schementi.Controls {
 
         private void AddPoint(Point point) {
             _polyline.Points.Add(point);
+            _latestAddedPoint = point;
             SetWatermarks(point.Y);
             SetLatestLevel(point.Y);
             SetCanvasHeight(point.Y);
@@ -406,6 +434,42 @@ namespace Schementi.Controls {
             Canvas.Height = double.NaN;
             Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));
         }
+
+        //private DoubleAnimation _animation;
+        //
+        //private void StartGraphAnimation() {
+        //    if (_animation != null)
+        //        return;
+
+        //    //Console.WriteLine(string.Format("{0} Sim Time: {1}", DateTime.Now, AverageSimulatedTimePerSecond));
+        //    _animation = new DoubleAnimation();
+        //    _animation.FillBehavior = FillBehavior.Stop;
+        //    _animation.From = 0.0;
+        //    _animation.To = DurationInPoints * -2;
+        //    _animation.Completed += new EventHandler(Animation_Completed);
+        //    _animation.Duration = TimeSpan.FromMilliseconds(Duration.TotalMilliseconds * 2);
+
+        //    GraphLine.BeginAnimation(Canvas.LeftProperty, _animation, HandoffBehavior.SnapshotAndReplace);
+        //}
+
+        //private void EndGraphAnimation() {
+        //    if (_animation == null)
+        //        return;
+
+        //    _animation.Completed -= new EventHandler(Animation_Completed);
+        //    _animation = null;
+
+        //    // Stop the old animation by overriding it with a new animation.
+        //    DoubleAnimation resetAnimation = new DoubleAnimation();
+        //    resetAnimation.To = 0.0;
+        //    resetAnimation.Duration = TimeSpan.Zero;
+        //    GraphLine.BeginAnimation(Canvas.LeftProperty, _animation, HandoffBehavior.SnapshotAndReplace);
+        //}
+
+        //void Animation_Completed(object sender, EventArgs e) {
+        //    EndGraphAnimation();
+        //    //Redraw();
+        //}
 
         #endregion
     }

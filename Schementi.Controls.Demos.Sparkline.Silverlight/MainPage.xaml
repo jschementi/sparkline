@@ -19,7 +19,7 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <schementi:Sparkline Margin="0 1"
-                             Foreground="#FFEEEEEE" ShowLatestLevel="True" />
+                             Foreground="#FFEEEEEE" />
         <schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
                              Foreground="#FFEEEEEE"
                              PointFill="White" PointRadius="1"/>
