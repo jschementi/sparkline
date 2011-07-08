@@ -41,7 +41,7 @@ namespace Schementi.Controls.Demos.Sparkline {
                     for (var i = 0; i < sparklinesCount; i++) {
                         var random = new Random();
                         //x = random.Next(100, 200);
-                        x = x + (random.NextDouble() * 10 * random.NextDouble() * (random.NextDouble() < 0.5 ? -1 : 1));
+                        x = x + (random.NextDouble() * 10 * random.NextDouble() * (random.NextDouble() < random.NextDouble() ? -1 : 1));
                         if (x < 1) x = Math.Abs(x) + 1;
                         Console.WriteLine(x);
 
