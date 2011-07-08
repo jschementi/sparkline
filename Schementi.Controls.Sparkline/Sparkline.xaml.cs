@@ -241,7 +241,7 @@ namespace Schementi.Controls {
         #region Fields
         private int _nextXValue;
 
-        private const int XWidth = 10;
+        private const int XWidth = 2;
 
         private Polyline _polyline;
 
