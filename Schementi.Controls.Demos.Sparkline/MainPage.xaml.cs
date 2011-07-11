@@ -39,35 +39,48 @@ namespace Schementi.Controls.Demos.Sparkline {
         }
 
         private void StartSparkline() {
-            const int tickTime = 1000 / 2;
+            Func<int> tickTime = () => {
+                // Convert.ToInt32(Math.Floor(SimpleRNG.GetUniform()*2000));
+                return 1000/2;
+            };
             var stop = false;
             int lineCount = 0;
-            Func<Controls.Sparkline, Action> nextTick = s => {
-                var currentLine = lineCount++;
+
+            Func<Controls.Sparkline, Action> tickGenerator = s => {
                 var x = 100.0;
+                var currentLine = ++lineCount - 1;
+                var decoratedTickCount = 0;
+                Action<Point, Panel> drawFlag = (point, panel) => {
+                    if (SimpleRNG.GetUniform() < 0.75) return;
+                    DrawFlag(s, point, panel, decoratedTickCount);
+                    decoratedTickCount++;
+                };
+                if (currentLine == 0) {
+                    Controls.Sparkline.TimeValueAddedHandler onTimeValueAdded = (sender, eventArgs) =>
+                        drawFlag(eventArgs.Point, eventArgs.Panel);
+                    s.TimeValueAdded += onTimeValueAdded;
+                    s.Unloaded += (sender, e) => s.TimeValueAdded -= onTimeValueAdded;
+                }
                 return () => {
-                    var count = 0;
                     while (true) {
                         x = x + SimpleRNG.GetNormal()*2;
-                        if (x < 1) x = Math.Abs(x) + 1;
                         Console.WriteLine(x);
 
-                        Action eachTick = () =>
-                            s.AddTimeValue(x, null, (point, panel) =>
-                                DrawFlag(currentLine, s, point, panel, ref count));
+                        Dispatcher.BeginInvoke((Action)(() => s.AddTimeValue(x)));
 
-                        Dispatcher.BeginInvoke(eachTick);
-
-                        Thread.Sleep(tickTime);
+                        Thread.Sleep(tickTime());
                         lock (StopLock) if (stop) return;
                     }
                 };
             };
 
-            var tickGenerators = Sparklines.Select(nextTick).ToArray();
+            var tickGenerators = Sparklines.Select(tickGenerator).ToArray();
 
-            Func<Action, WaitCallback> tickLoop = gen => wc => gen();
-            Action start = () => { foreach (var gen in tickGenerators) ThreadPool.QueueUserWorkItem(tickLoop(gen)); };
+            Func<Action, WaitCallback> toWaitCallback = gen => wc => gen();
+            Action start = () => {
+                foreach (var generateTicks in tickGenerators)
+                    ThreadPool.QueueUserWorkItem(toWaitCallback(generateTicks));
+            };
 
             Loaded += (s, e) => start();
             Unloaded += (s, e) => {
@@ -77,10 +90,7 @@ namespace Schementi.Controls.Demos.Sparkline {
             };
         }
 
-        public void DrawFlag(int currentLine, Controls.Sparkline s, Point point, Panel panel, ref int count) {
-            if (currentLine > 0) return;
-            if (SimpleRNG.GetUniform() < 0.75) return;
-
+        public void DrawFlag(Controls.Sparkline s, Point point, Panel panel, int count) {
             var path = new Path();
             var circle = new EllipseGeometry { Center = point, RadiusX = 0.5, RadiusY = 0.5 };
             path.Fill = new SolidColorBrush(Colors.Red);
@@ -89,28 +99,34 @@ namespace Schementi.Controls.Demos.Sparkline {
 
             var rect = new Grid {
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(point.X - 0.25, point.Y, 0, 0).Align(s.LineMargin),
+                Margin = new Thickness(point.X - 0.20, point.Y, 0, 0).Align(s.LineMargin),
             };
-            var line = new Border { Background = new SolidColorBrush(Colors.Gray), Width = 0.4, HorizontalAlignment = System.Windows.HorizontalAlignment.Left, UseLayoutRounding = false };
+            var line = new Border {
+                Background = new SolidColorBrush(Colors.Gray), 
+                Width = 0.4, 
+                HorizontalAlignment = HorizontalAlignment.Left,
+                UseLayoutRounding = false
+            };
             var box = new Border {
-                Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x11, 0x11, 0x11)),
+                Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x55, 0x55, 0x55)),
                 BorderBrush = new SolidColorBrush(Colors.Gray),
                 BorderThickness = new Thickness(0.4),
-                Padding = new Thickness(0.5, 0.5, 0.5, 0.5),
+                Padding = new Thickness(0.4),
+                Margin = new Thickness(0, 0, 0, 1),
                 VerticalAlignment = VerticalAlignment.Bottom,
                 RenderTransform = new ScaleTransform { ScaleY = -1.0 },
-                RenderTransformOrigin = new Point(0.0, 0.0),
+                RenderTransformOrigin = new Point(0.5, 0.5),
             };
             var text = new TextBlock {
                 Text = Convert.ToString(Math.Round(point.Y, 2)),
-                FontSize = 2,
+                FontSize = 3,
                 Foreground = new SolidColorBrush(Colors.White),
             };
             box.Child = text;
             rect.Children.Add(line);
             rect.Children.Add(box);
 
-            panel.Children.Insert(count++, rect);
+            panel.Children.Insert(count, rect);
         }
 
         public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject {

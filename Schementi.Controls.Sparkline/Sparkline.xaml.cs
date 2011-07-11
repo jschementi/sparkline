@@ -256,6 +256,24 @@ namespace Schementi.Controls {
 
         #endregion
 
+        #region Events
+        public class TimeValueAddedEventArgs : EventArgs {
+            public Point Point { get; set; }
+            public Panel Panel { get; set; }
+        }
+
+        public delegate void TimeValueAddedHandler(Sparkline obj, TimeValueAddedEventArgs eventArgs);
+
+        public event TimeValueAddedHandler TimeValueAdded;
+
+        protected void OnTimeValueAdded(Point po, Panel pa) {
+            var handler = TimeValueAdded;
+            if (handler != null) {
+                handler(this, new TimeValueAddedEventArgs { Point = po, Panel = pa });
+            }
+        }
+        #endregion
+
         #region Fields
         private int _nextXValue;
 
@@ -278,12 +296,8 @@ namespace Schementi.Controls {
             Loaded += (s, e) => InitializePolyline();
         }
 
-        public void AddTimeValue(double value, DateTime? time = null, Action<Point, Panel> onAdd = null) {
-            _latestAddedPoint = null;
+        public void AddTimeValue(double value, DateTime? time = null) {
             TimeSeries.AddTimeValue(value, time);
-            if (onAdd != null && _latestAddedPoint.HasValue) {
-                onAdd(_latestAddedPoint.Value, Canvas);
-            }
         }
         #endregion
 
@@ -378,6 +392,7 @@ namespace Schementi.Controls {
 //            Canvas.Children.Add(textbox);
 //#endif
             _nextXValue++;
+            OnTimeValueAdded(point, Canvas);
         }
 
         private Path DrawDot(Point center) {
