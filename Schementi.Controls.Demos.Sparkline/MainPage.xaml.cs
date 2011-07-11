@@ -25,6 +25,15 @@ using TestSimpleRNG;
 namespace Schementi.Controls.Demos.Sparkline {
 
     public partial class MainPage {
+
+        private const bool IsSilverlight =
+#if SILVERLIGHT
+                true
+#else
+                false
+#endif
+                ;
+
         static readonly object StopLock = new object();
         public MainPage() {
             InitializeComponent();
@@ -111,8 +120,8 @@ namespace Schementi.Controls.Demos.Sparkline {
                 Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x55, 0x55, 0x55)),
                 BorderBrush = new SolidColorBrush(Colors.Gray),
                 BorderThickness = new Thickness(0.4),
-                Padding = new Thickness(0.4),
-                Margin = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(0.4, IsSilverlight ? 0.4 : 0.0, 0.4, IsSilverlight ? 0.0 : 0.4),
+                Margin = new Thickness(0, 0, 0, 0.5),
                 VerticalAlignment = VerticalAlignment.Bottom,
                 RenderTransform = new ScaleTransform { ScaleY = -1.0 },
                 RenderTransformOrigin = new Point(0.5, 0.5),

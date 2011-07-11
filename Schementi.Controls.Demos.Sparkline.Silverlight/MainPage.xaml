@@ -4,10 +4,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:schementi="clr-namespace:Schementi.Controls;assembly=Schementi.Controls.Sparkline" 
-    xmlns:sdk="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls" 
+    xmlns:sdk="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls"
+    xmlns:local="clr-namespace:Schementi.Controls.Demos.Sparkline.Silverlight" 
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400">
 
+    <UserControl.Resources>
+        <local:HeightToFontSizeConverter x:Name="HeightToFontSizeConverter" />
+    </UserControl.Resources>
+    
     <Grid Background="Black" x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -26,7 +31,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Rectangle Fill="#22FFFFFF"/>
-            <TextBlock Text="sell orders" FontSize="{Binding ActualHeight, ElementName=HeightElement}" Foreground="#DDFFFFFF" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <TextBlock Text="sell orders" FontSize="{Binding ActualHeight, ElementName=HeightElement, Converter={StaticResource HeightToFontSizeConverter}}" Foreground="#DDFFFFFF" HorizontalAlignment="Left" VerticalAlignment="Center" />
             <Grid VerticalAlignment="Stretch" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*"/>
