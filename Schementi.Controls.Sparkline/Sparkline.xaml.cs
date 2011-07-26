@@ -29,6 +29,7 @@ using Schementi.Controls.Extensions.Silverlight;
 namespace Schementi.Controls {
 
     public class TimeValue {
+        public string Id;
         public DateTime Time;
         public double Value;
     }
@@ -36,7 +37,7 @@ namespace Schementi.Controls {
     public class TimeSeries : ObservableCollection<TimeValue> {
         public void AddTimeValue(double value, DateTime? dateTime = null) {
             if (dateTime == null) dateTime = DateTime.Now;
-            Add(new TimeValue { Time = dateTime.Value, Value = value });
+            Add(new TimeValue {Id = Guid.NewGuid().ToString(), Time = dateTime.Value, Value = value });
         }
     }
 
@@ -260,16 +261,17 @@ namespace Schementi.Controls {
         public class TimeValueAddedEventArgs : EventArgs {
             public Point Point { get; set; }
             public Panel Panel { get; set; }
+            public TimeValue TimeValue { get; set; }
         }
 
         public delegate void TimeValueAddedHandler(Sparkline obj, TimeValueAddedEventArgs eventArgs);
 
         public event TimeValueAddedHandler TimeValueAdded;
 
-        protected void OnTimeValueAdded(Point po, Panel pa) {
+        protected void OnTimeValueAdded(Point po, Panel pa, TimeValue timeValue) {
             var handler = TimeValueAdded;
             if (handler != null) {
-                handler(this, new TimeValueAddedEventArgs { Point = po, Panel = pa });
+                handler(this, new TimeValueAddedEventArgs { Point = po, Panel = pa, TimeValue = timeValue });
             }
         }
         #endregion
@@ -367,6 +369,7 @@ namespace Schementi.Controls {
         private void DrawTimeValue(TimeValue newTimeValue) {
             var point = GetPoint(newTimeValue);
             AddPoint(point);
+            OnTimeValueAdded(point, Canvas, newTimeValue);
             ScrollViewer.ScrollToRightEnd();
         }
 
@@ -392,7 +395,6 @@ namespace Schementi.Controls {
 //            Canvas.Children.Add(textbox);
 //#endif
             _nextXValue++;
-            OnTimeValueAdded(point, Canvas);
         }
 
         private Path DrawDot(Point center) {
