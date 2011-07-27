@@ -41,7 +41,7 @@ namespace Schementi.Controls.Demos.Sparkline {
         }
 
         private Controls.Sparkline[] _sparklines;
-        private Controls.Sparkline[] Sparklines {
+        private IEnumerable<Controls.Sparkline> Sparklines {
             get {
                 return _sparklines ?? (_sparklines = FindVisualChildren<Controls.Sparkline>(LayoutRoot).ToArray());
             }
@@ -60,9 +60,9 @@ namespace Schementi.Controls.Demos.Sparkline {
                 var currentLine = ++lineCount - 1;
                 var decoratedTickCount = 0;
                 Action<Point, Panel> drawFlag = (point, panel) => {
-                    if (SimpleRNG.GetUniform() < 0.75) return;
-                    DrawFlag(s, point, panel, decoratedTickCount);
-                    decoratedTickCount++;
+                    if (SimpleRNG.GetUniform() < 0.8) return;
+                    var flagUp = SimpleRNG.GetUniform() < 0.5;
+                    decoratedTickCount += DrawFlag(flagUp, s, point, panel, decoratedTickCount);
                 };
                 if (currentLine == 0) {
                     Controls.Sparkline.TimeValueAddedHandler onTimeValueAdded = (sender, eventArgs) =>
@@ -99,43 +99,80 @@ namespace Schementi.Controls.Demos.Sparkline {
             };
         }
 
-        public void DrawFlag(Controls.Sparkline s, Point point, Panel panel, int count) {
-            var path = new Path();
-            var circle = new EllipseGeometry { Center = point, RadiusX = 0.5, RadiusY = 0.5 };
-            path.Fill = new SolidColorBrush(Colors.Red);
-            path.Data = circle;
+        public int DrawFlag(bool flagUp, Controls.Sparkline s, Point point, Panel panel, int count) {
+
+            // add red point to highlight sparkline
+            var path = new Path {
+                Fill = new SolidColorBrush(Colors.Red),
+                Data = new EllipseGeometry {Center = point, RadiusX = 0.5, RadiusY = 0.5}
+            };
             panel.Children.Add(path);
 
-            var rect = new Grid {
+            // add "flag"
+            var flag = new Grid {
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(point.X - 0.20, point.Y, 0, 0).Align(s.LineMargin),
-            };
-            var line = new Border {
-                Background = new SolidColorBrush(Colors.Gray), 
-                Width = 0.4, 
-                HorizontalAlignment = HorizontalAlignment.Left,
-                UseLayoutRounding = false
-            };
-            var box = new Border {
-                Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x55, 0x55, 0x55)),
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                BorderThickness = new Thickness(0.4),
-                Padding = new Thickness(0.4, IsSilverlight ? 0.4 : 0.0, 0.4, IsSilverlight ? 0.0 : 0.4),
-                Margin = new Thickness(0, 0, 0, 0.5),
-                VerticalAlignment = VerticalAlignment.Bottom,
-                RenderTransform = new ScaleTransform { ScaleY = -1.0 },
-                RenderTransformOrigin = new Point(0.5, 0.5),
-            };
-            var text = new TextBlock {
-                Text = Convert.ToString(Math.Round(point.Y, 2)),
-                FontSize = 3,
-                Foreground = new SolidColorBrush(Colors.White),
-            };
-            box.Child = text;
-            rect.Children.Add(line);
-            rect.Children.Add(box);
+                VerticalAlignment = flagUp ? VerticalAlignment.Top : VerticalAlignment.Bottom,
+                Margin = new Thickness(point.X - 0.3, point.Y, 0, 0).Align(s.LineMargin),
+                Height = 10,
+                Children = {
+                    
+                    // flagpole
+                    new Border {
+                        Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x55, 0x55, 0x55)),
+                        Width = 0.6,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        UseLayoutRounding = false
+                    },
 
-            panel.Children.Insert(count, rect);
+                    // Actual flag
+                    new Border {
+                        Margin = new Thickness(0, 0, 0, -0.2),
+                        //Padding = new Thickness(0.2, 0.0, 0.4, 0.0),
+                        VerticalAlignment = flagUp ? VerticalAlignment.Bottom : VerticalAlignment.Top,
+                        RenderTransform = new ScaleTransform {ScaleY = -1.0},
+                        RenderTransformOrigin = new Point(0.5, 0.5),
+                        Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x55, 0x55, 0x55)),
+                        Child = new StackPanel {
+                            Orientation = Orientation.Vertical,
+                            Children = {
+                                // flag content
+                                new TextBlock {
+                                    Text = Convert.ToString(Math.Round(point.Y, 2)),
+                                    FontSize = 2.5,
+                                    Foreground = new SolidColorBrush(Colors.White),
+                                    HorizontalAlignment = HorizontalAlignment.Left,
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                },
+                                // flag label
+                                new TextBlock {
+                                    Text = flagUp ? "Buy" : "Sell",
+                                    FontSize = 1.5,
+                                    //Padding = new Thickness(0,0.2,0,0),
+                                    Foreground = new SolidColorBrush(Color.FromArgb(0xff, 0xaa, 0xaa, 0xaa)),
+                                    HorizontalAlignment = HorizontalAlignment.Left,
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                },
+                            }
+                        },
+                    },
+                }
+            };
+
+            var border = (Border)flag.Children[1];
+            var stackpanel = (StackPanel)border.Child;
+            if (!flagUp) {
+                flag.Margin = new Thickness(point.X - 0.2, 0, 0, panel.Height - point.Y).Align(s.LineMargin);
+                border.Margin = new Thickness(0, -0.2, 0, 0);
+                var children = stackpanel.Children;
+                var label = children[1];
+                children.RemoveAt(1);
+                children.Insert(0, label);
+            }
+
+            panel.Children.Insert(count, flag);
+            //panel.Children.Insert(count, new Border { Background = new SolidColorBrush(Color.FromArgb(0x22, 0x00, 0x00, 0x00))});
+
+            return 1;
         }
 
         public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject {

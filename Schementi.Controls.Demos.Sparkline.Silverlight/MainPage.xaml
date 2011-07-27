@@ -24,28 +24,8 @@
             <ColumnDefinition Width="3"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <Rectangle Fill="#22FFFFFF"/>
-            <TextBlock Text="sell orders" FontSize="{Binding ActualHeight, ElementName=HeightElement, Converter={StaticResource HeightToFontSizeConverter}}" Foreground="#DDFFFFFF" HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <Grid VerticalAlignment="Stretch" Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="1*"/>
-                    <RowDefinition Height="4*"/>
-                    <RowDefinition Height="1*"/>
-                    <RowDefinition Height="0.5*"/>
-                </Grid.RowDefinitions>
-                <Rectangle Fill="#22FFFFFF" />
-                <schementi:Sparkline Grid.RowSpan="4"
-                                     Margin="0 1"
-                                     Foreground="#FFEEEEEE" />
-                <Rectangle x:Name="HeightElement" Grid.Row="3"/>
-            </Grid>
-        </Grid>
+        <schementi:Sparkline Margin="0 1"
+                             Foreground="#FFEEEEEE" />
         <schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
                              Foreground="#FFEEEEEE"
                              PointFill="White" PointRadius="1"/>
