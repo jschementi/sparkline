@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
@@ -22,29 +21,22 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
-#if SILVERLIGHT
-using Schementi.Controls.Extensions.Silverlight;
-#endif
 
 namespace Schementi.Controls {
-
-    public class TimeValue {
-        public string Id;
-        public DateTime Time;
-        public double Value;
-    }
-
-    public class TimeSeries : ObservableCollection<TimeValue> {
-        public void AddTimeValue(double value, DateTime? dateTime = null) {
-            if (dateTime == null) dateTime = DateTime.Now;
-            Add(new TimeValue {Id = Guid.NewGuid().ToString(), Time = dateTime.Value, Value = value });
-        }
-    }
 
     /// <summary>
     /// Interaction logic for Sparkline.xaml
     /// </summary>
-    public partial class Sparkline {
+    public class Sparkline : ContentControl {
+#if !SILVERLIGHT
+        static Sparkline() {
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(Sparkline),
+                new FrameworkPropertyMetadata(typeof(Sparkline)));
+
+        }
+#endif
+
         #region Dependency Properties
         #region Points
         public static DependencyProperty TimeSeriesProperty = DependencyProperty.Register(
@@ -161,8 +153,7 @@ namespace Schementi.Controls {
             ((Sparkline)d).OnShowWatermarksPropertyChanged();
         }
 
-        private void OnShowWatermarksPropertyChanged()
-        {
+        private void OnShowWatermarksPropertyChanged() {
             if (ShowWatermarks) {
                 _lowwatermark = new Rectangle {
                     Fill = new SolidColorBrush(Colors.Red),
@@ -173,7 +164,7 @@ namespace Schementi.Controls {
                 };
                 BindingOperations.SetBinding(_lowwatermark, MarginProperty,
                                              new Binding("LowWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                Canvas.Children.Insert(0, _lowwatermark);
+                _canvas.Children.Insert(0, _lowwatermark);
 
                 _highwatermark = new Rectangle {
                     Fill = new SolidColorBrush(Colors.Green),
@@ -184,15 +175,15 @@ namespace Schementi.Controls {
                 };
                 BindingOperations.SetBinding(_highwatermark, MarginProperty,
                                              new Binding("HighWaterMark") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                Canvas.Children.Insert(0, _highwatermark);
+                _canvas.Children.Insert(0, _highwatermark);
             } else {
                 if (_lowwatermark != null) {
-                    Canvas.Children.Remove(_lowwatermark);
+                    _canvas.Children.Remove(_lowwatermark);
                     _lowwatermark = null;
                 }
 
                 if (_highwatermark != null) {
-                    Canvas.Children.Remove(_highwatermark);
+                    _canvas.Children.Remove(_highwatermark);
                     _highwatermark = null;
                 }
             }
@@ -226,10 +217,10 @@ namespace Schementi.Controls {
                 };
                 BindingOperations.SetBinding(_latestLevel, MarginProperty,
                                              new Binding("LatestLevel") { Source = this, Converter = new YCoordinateToThicknessConverter() });
-                Canvas.Children.Insert(0, _latestLevel);
+                _canvas.Children.Insert(0, _latestLevel);
             } else {
                 if (_latestLevel != null) {
-                    Canvas.Children.Remove(_latestLevel);
+                    _canvas.Children.Remove(_latestLevel);
                     _latestLevel = null;
                 }
             }
@@ -281,51 +272,48 @@ namespace Schementi.Controls {
 
         private const int XWidth = 2;
 
+        private Grid _canvas;
         private Polyline _polyline;
 
         private Rectangle _highwatermark;
         private Rectangle _lowwatermark;
         private Rectangle _latestLevel;
-
-        private Point? _latestAddedPoint;
         #endregion
 
         #region Public API
-
         public Sparkline() {
-            MyInitializeComponent();
+            DefaultStyleKey = typeof (Sparkline);
             TimeSeries = new TimeSeries();
-            Loaded += (s, e) => InitializePolyline();
         }
 
-        public void AddTimeValue(double value, DateTime? time = null) {
-            TimeSeries.AddTimeValue(value, time);
+        public string AddTimeValue(double value, DateTime? time = null) {
+            return TimeSeries.AddTimeValue(value, time);
         }
+
+        public Action ScrollToRightEnd { private get; set; }
         #endregion
 
         #region Implementation
 
-        public void MyInitializeComponent() {
-            if (_contentLoaded) {
-                return;
-            }
-            _contentLoaded = true;
-            Application.LoadComponent(this, new Uri("/Schementi.Controls.Sparkline;component/Sparkline.xaml", UriKind.Relative));
-            Root = ((Grid)(FindName("Root")));
-            ScrollViewer = ((ScrollViewer)(FindName("ScrollViewer")));
-            Canvas = ((Grid)(FindName("Canvas")));
+        public override void OnApplyTemplate() {
+            InitializePolyline();
+            base.OnApplyTemplate();
         }
 
         private void InitializePolyline() {
-            _polyline = new Polyline();
+            _canvas = GetTemplateChild("Canvas") as Grid;
+            _polyline = GetTemplateChild("Polyline") as Polyline;
+            if (_canvas == null) throw new Exception("Sparkline: \"Canvas\" element not found in custom template.");
+            if (_polyline == null) throw new Exception("Sparkline: \"Polyline\" element not found in custom template.");
+
             if (Foreground == null) Foreground = new SolidColorBrush(Colors.Black);
+
             BindingOperations.SetBinding(_polyline, Shape.StrokeProperty,
                                          new Binding("Foreground") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, Shape.StrokeThicknessProperty,
                                          new Binding("StrokeThickness") { Mode = BindingMode.TwoWay, Source = this });
             BindingOperations.SetBinding(_polyline, MarginProperty,
-                new Binding("LineMargin") { Mode = BindingMode.TwoWay, Source = this });
-            Canvas.Children.Add(_polyline);
+                                         new Binding("LineMargin") { Mode = BindingMode.TwoWay, Source = this });
         }
 
         private static void OnTimeSeriesPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
@@ -350,16 +338,16 @@ namespace Schementi.Controls {
 
         private void ResetTimeSeries() {
             _both = _lower = _higher = false;
-            Canvas.Children.Clear();
-            Canvas.Children.Add(_polyline);
+            _canvas.Children.Clear();
+            _canvas.Children.Add(_polyline);
             if (ShowWatermarks) {
-                Canvas.Children.Add(_lowwatermark);
-                Canvas.Children.Add(_highwatermark);
+                _canvas.Children.Add(_lowwatermark);
+                _canvas.Children.Add(_highwatermark);
             }
             if (ShowLatestLevel) {
-                Canvas.Children.Add(_latestLevel);
+                _canvas.Children.Add(_latestLevel);
             }
-            Canvas.Height = double.NaN;
+            _canvas.Height = double.NaN;
             _nextXValue = 0;
             foreach (var timeValue in TimeSeries) {
                 DrawTimeValue(timeValue);
@@ -369,37 +357,24 @@ namespace Schementi.Controls {
         private void DrawTimeValue(TimeValue newTimeValue) {
             var point = GetPoint(newTimeValue);
             AddPoint(point);
-            OnTimeValueAdded(point, Canvas, newTimeValue);
-            ScrollViewer.ScrollToRightEnd();
+            OnTimeValueAdded(point, _canvas, newTimeValue);
+            if (ScrollToRightEnd != null) ScrollToRightEnd();
         }
 
         private void AddPoint(Point point) {
             _polyline.Points.Add(point);
-            _latestAddedPoint = point;
             SetWatermarks(point.Y);
             SetLatestLevel(point.Y);
             SetCanvasHeight(point.Y);
+            SetContainerHeight(point.Y);
             if (PointRadius > 0.0)
-                Canvas.Children.Add(DrawDot(point));
-//#if DEBUG
-//            var textbox = new TextBlock {
-//                Text = Convert.ToString(Math.Round(point.Y, 2)),
-//                FontSize = 3,
-//                Foreground = this.Foreground,
-//                Opacity = 0.25,
-//                Padding = new Thickness(2.0, 0, 0, 0),
-//                Margin = new Thickness(point.X, point.Y + 1, 0, 0),
-//                RenderTransform = new ScaleTransform { ScaleY = -1.0 },
-//                RenderTransformOrigin = new Point(0.0, 0.0),
-//            };
-//            Canvas.Children.Add(textbox);
-//#endif
+                _canvas.Children.Add(DrawDot(point));
             _nextXValue++;
         }
 
         private Path DrawDot(Point center) {
             var path = new Path();
-            var circle = new EllipseGeometry {Center = center, RadiusX = PointRadius, RadiusY = PointRadius};
+            var circle = new EllipseGeometry { Center = center, RadiusX = PointRadius, RadiusY = PointRadius };
             path.Fill = PointFill;
             path.Data = circle;
             return path;
@@ -431,25 +406,33 @@ namespace Schementi.Controls {
 
         private void SetCanvasHeight(double y) {
             if (TimeSeries.Count < 2) {
-                Canvas.Height = _height = y + MinYRange;
+                _canvas.Height = _height = y + MinYRange;
                 _lowMargin = -y + MinYRange;
-                Canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
+                _canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
                 return;
             }
             if (!_both && LowWaterMark != null && LowWaterMark < _lowMargin * -1) {
                 _lower = true;
                 _lowMargin = -LowWaterMark.Value;
-                Canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
+                _canvas.Margin = new Thickness(0, 0, 0, _lowMargin);
                 _both = _lower && _higher;
             }
             if (!_both && HighWaterMark != null && HighWaterMark > _height) {
                 _higher = true;
-                Canvas.Height = HighWaterMark.Value;
-                _both = _lower && _higher;    
+                _canvas.Height = HighWaterMark.Value;
+                _both = _lower && _higher;
             }
             if (!_both) return;
-            Canvas.Height = double.NaN;
-            Canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));
+            _canvas.Height = double.NaN;
+            _canvas.Margin = new Thickness(0, 0, 0, -(LowWaterMark ?? 0));
+        }
+
+        private void SetContainerHeight(double y) {
+            FrameworkElement canvas = _canvas;
+            var lineChart = this.Parent as LineChart;
+            if (lineChart != null) {
+                canvas = lineChart;
+            }
         }
 
         //private DoubleAnimation _animation;

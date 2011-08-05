@@ -55,19 +55,31 @@
     <Reference Include="System.Windows.Browser" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Schementi.Controls.Sparkline\Sparkline.xaml.cs">
-      <Link>Sparkline.xaml.cs</Link>
-      <DependentUpon>Sparkline.xaml</DependentUpon>
+    <Compile Include="..\Schementi.Controls.Sparkline\LineChart.cs">
+      <Link>LineChart.cs</Link>
+    </Compile>
+    <Compile Include="..\Schementi.Controls.Sparkline\Sparkline.cs">
+      <Link>Sparkline.cs</Link>
+    </Compile>
+    <Compile Include="..\Schementi.Controls.Sparkline\TimeSeries.cs">
+      <Link>TimeSeries.cs</Link>
+    </Compile>
+    <Compile Include="..\Schementi.Controls.Sparkline\Utilities\DependencyObjectExtensions.cs">
+      <Link>Utilities\DependencyObjectExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Schementi.Controls.Sparkline\Utilities\IEnumerableExtensions.cs">
+      <Link>Utilities\IEnumerableExtensions.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScrollViewerExtensions.cs" />
+    <Compile Include="Utilities\ScrollViewerExtensions.cs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Page Include="..\Schementi.Controls.Sparkline\Sparkline.xaml">
-      <Link>Sparkline.xaml</Link>
+    <Resource Include="..\Schementi.Controls.Sparkline\Themes\Generic.xaml">
+      <Link>Themes\Generic.xaml</Link>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>

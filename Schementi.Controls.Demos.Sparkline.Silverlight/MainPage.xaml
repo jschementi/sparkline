@@ -5,39 +5,34 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:schementi="clr-namespace:Schementi.Controls;assembly=Schementi.Controls.Sparkline" 
     xmlns:sdk="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls"
-    xmlns:local="clr-namespace:Schementi.Controls.Demos.Sparkline.Silverlight" 
-    mc:Ignorable="d"
+    xmlns:local="clr-namespace:Schementi.Controls.Demos.Sparkline.Silverlight" xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" xmlns:MarketChart="clr-namespace:Schementi.Controls.Demos.Sparkline" mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400">
 
-    <UserControl.Resources>
-        <local:HeightToFontSizeConverter x:Name="HeightToFontSizeConverter" />
-    </UserControl.Resources>
-    
     <Grid Background="Black" x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition/>
-            <RowDefinition Height="3"/>
-            <RowDefinition/>
+            <!--<RowDefinition/>-->
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="3"/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <schementi:Sparkline Margin="0 1"
-                             Foreground="#FFEEEEEE" />
-        <schementi:Sparkline Grid.Column="0" Grid.Row="2" Margin="0 2"
-                             Foreground="#FFEEEEEE"
-                             PointFill="White" PointRadius="1"/>
-        <schementi:Sparkline Grid.Column="2" Grid.Row="0" Margin="0 1"
+        <schementi:LineChart Margin="0 1">
+            <schementi:Sparkline Foreground="#FFCCCC66" />
+            <schementi:Sparkline Foreground="#FF0066FF">
+                <i:Interaction.Behaviors>
+                    <MarketChart:ChartAdornmentBehavior FlagUpLabel="Buy" FlagDownLabel="Sell"
+                                                        SubscribeToFlags="{Binding SubscribeToFlags}" 
+                                                        UnsubscribeFromFlags="{Binding UnsubscribeFromFlags}" />
+                </i:Interaction.Behaviors>
+            </schementi:Sparkline>
+        </schementi:LineChart>
+        <!--<schementi:LineChart Margin="0 1" Grid.Row="1">
+            <schementi:Sparkline 
                              ShowWatermarks="False" ShowLatestLevel="True"
                              StrokeThickness="1"
-                             Foreground="#FFEEEEEE" />
-        <schementi:Sparkline Grid.Column="2" Grid.Row="2" Margin="0 1"
+                             Foreground="#FF00FFFF" />
+            <schementi:Sparkline 
                              ShowWatermarks="True" ShowLatestLevel="True"
-                             Foreground="#FFEEEEEE"
+                             Foreground="#FFFF00FF"
                              PointFill="White" PointRadius="0.5"/>
-        <sdk:GridSplitter Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="3"/>
-        <sdk:GridSplitter Grid.Column="1" Grid.RowSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="3"/>
+        </schementi:LineChart>-->
     </Grid>
+
 </UserControl>
